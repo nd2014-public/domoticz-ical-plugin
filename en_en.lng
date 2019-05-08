@@ -1,0 +1,137 @@
+﻿----- End iCal Plugin information -----|;|
+----- iCal Plugin information ---------|;|
+At Work|;|
+autumn|;|
+Connected successfully to {}:{}|;|
+Devices created.|;|
+Failed to connect ({}) to: {}:{} with error: {}|;|
+Holidays|;|
+iCal Status|;|
+Initialisation finished, will sync iCal every : {} minutes|;|
+Listen on iCalWebserver - Port: {}|;|
+onCommand called for Unit {} : Parameter  {}  , Level: {}|;|
+onDeviceRemoved  call for device: {}|;|
+onDisconnect called for connection '{}'|;|
+onMessage called for connection: {}:{}|;|
+onStop called|;|
+Seasons|;|
+Server Connections: |;|
+spring|;|
+summer|;|
+Unknown verb in request: {}|;|
+we update {}:'{}' ({})|;|
+winter|;|
+Actual status for {} is: {}|;|
+Atwork detected : {}  and defaultToBlank is: {}|;|
+Command detected : {} |;|
+command to execute : {}|;|
+country not managed in Holidays: {} , we create base one|;|
+data process OK|;|
+Date to exclude : {}|;|
+Device name for Atwork : {}|;|
+Domoticz do not send OK message for variables ?????|;|
+Domoticz do not send OK message for: {} ??|;|
+Domoticz not return OK for create uservariable|;|
+Domoticz status not OK for {} command: {}|;|
+End of : {}|;|
+End schedule not created, scope = {}|;|
+Erreur to execute del user variable : {}|;|
+Erreur to execute get user variables|;|
+Error in cmd syntax : {}|;|
+Error in diff iCal, first time execution this can be normal, we continue anyway|;|
+Error in schedules for Holidays|;|
+error in translation|;|
+Error on json from Received Data: {}|;|
+Error on value for level : {}|;|
+Error on value for switch/push : {}|;|
+Error retreive dict data from Domoticz : {}|;|
+Error sending command to Domoticz : {}|;|
+Error sending data|;|
+Error to create add timer for end: {}|;|
+Error to create add timer for start: {}|;|
+Error to create devices|;|
+Error to create lang file translated : {}|;|
+Error to create timer for end : {}|;|
+Error to create timer for start : {}|;|
+Error to delete this file: {}|;|
+Error to execute add timer for end: {}|;|
+Error to execute add timer for start: {}|;|
+Error to execute command : {}|;|
+Erreur to execute create user variable|;|
+Error to execute Geo Data query|;|
+Error to execute query|;|
+error to generate uservariables dict|;|
+Error to load language file|;|
+Error to process data|;|
+Error to re create Holidays selector|;|
+Error to read lang file to translate : {}|;|
+Error to remove timers from atwork|;|
+Error to save iCal.ics|;|
+ERROR to start subprocess|;|
+Error to translate : {}|;|
+Error to update status|;|
+ERROR, location not defined|;|
+First date : {}|;|
+Hardware ID: {} |;|
+Holidays detected : {} |;|
+iCal file do not exist : {}|;|
+Information level: {}|;|
+Lang file not exist or to process data from : |;|
+Lang file not exist, we try to fall back to "en" : {}|;|
+Level for actual season : {}|;|
+No devices in plugin system....|;|
+No iCal file|;|
+No uservariable : {}|;|
+Not able to find codevillage|;|
+Not able to query data from Meteo France|;|
+Nothing new in iCal|;|
+Nothing to do for this schedule: {}|;|
+nothing to do for valuedevice : {}|;|
+Nothing to do now|;|
+Nothing to do on subprocess, devices list : {}|;|
+Number of days generated : {}|;|
+Plugin is on off/pause, nothing to do|;|
+Port already in use|;|
+processing data : {}|;|
+Request Domoticz to : {} used encoding is : {}|;|
+Request from domoticz to : {} with encoding : {}|;|
+Rule name  : {}|;|
+executing, sync every {} minutes |;|
+executing, updating Holidays ....|;|
+executing, updating isRain ......|;|
+shell process to generate iCal.ics file|;|
+Start date : {}|;|
+the uservariable exist: {} --> {}|;|
+TimeZone from TZID : {}|;|
+TimeZone from Uservariables : {}|;|
+TimeZone from X-WR-TIMEZONE : {}|;|
+Today      : {}|;|
+Today + xxx: {}|;|
+Typecmd not managed here (execute / schedule the cmd) : {}|;|
+Typecmd not managed here (we schedule from start to end) : {}|;|
+unknown color : {}|;|
+Unknown command type : {}|;|
+unknown device : {}|;|
+Unknown key...!!! ???|;|
+WARNING : occurence has been modified, result could be unpredictable|;|
+WARNING :  start date overlap end date, result unpredictable|;|
+Warning --- partial day for holidays : start {} end : {}|;|
+we add day {} to holidays|;|
+we clean related files in plugin folder|;|
+we clean uservariables in database|;|
+We do not find atwork device|;|
+we do not know what to do of received data|;|
+we do not work on windows|;|
+we execute cmd now and schedule end|;|
+we have deleted this file: {}|;|
+we have deleted uservariable: {} with IDX {}|;|
+we manage AtWork switch : {}|;|
+We proceed to the clean up....|;|
+we re generate domvars |;|
+we reload language : {}|;|
+we re-use existing file : {}|;|
+we schedule from start to end|;|
+we send holidays data|;|
+we take valuedevice from others func : {}|;|
+we work on windows|;|
+web process to generate iCal.ics file|;|
