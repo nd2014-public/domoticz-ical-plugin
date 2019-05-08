@@ -3,6 +3,9 @@
 #   Part of Domoticz plugin: iCal
 #   Color keyword  https://www.w3.org/TR/SVG/types.html#ColorKeywords
 #   Geotool https://nominatim.openstreetmap.org/reverse.php?format=json&lat=xx.xxxxxx&lon=yy.yyyyyy
+#   02/03/2019: change adduservariable 
+#   03/03/2019: modify startdt (startdtorig) for rrule to not be TZ dependent
+#   28/04/2019: add possibility to have multiple devices (separate by ',') on the cmd line, e.g.: #cmd#dev1,dev2,dev3:switch:On
 #
 
 from datetime import datetime, timedelta, date
@@ -359,17 +362,28 @@ def creVar(varname,value):
                     value = "*unknown*"
             elif value == 'vc' and langto == 'fr':
                 # we need to find the village code linked to the name (can do the search also by postal code)
-                url = 'http://www.meteofrance.com/mf3-rpc-portlet/rest/lieu/facet/pluie/search/input=' + postcr['address']['village']
-                vildata = queryData(url)
-                if vildata:
-                    # we need first rec only to find the code, else info not available
-                    if (vildata[0]['slug']).lower() == (postcr['address']['village']).lower():                    
-                        value = vildata[0]['id']
-                        codevil = value
+                if 'village' in postcr['address']:
+                    value = postcr['address']['village']
+                elif 'city' in postcr['address']:
+                    value = postcr['address']['city']
+                else:
+                    value = "*unknown*"
+                    
+                try:
+                    url = 'http://www.meteofrance.com/mf3-rpc-portlet/rest/lieu/facet/pluie/search/input=' + postcr['address']['village']
+                    vildata = queryData(url)
+                    if vildata:
+                        # we need first rec only to find the code, else info not available
+                        if (vildata[0]['slug']).lower() == (postcr['address']['village']).lower():                    
+                            value = vildata[0]['id']
+                            codevil = value
+                except:
+                    print("Error get meteo")
+
 
         params ={
                     'type':'command',
-                    'param':'saveuservariable',
+                    'param':'adduservariable',
                     'vname':'' +   str(varname) + '', 
                     'vtype':'2',
                     'vvalue':'' + str(value) + ''
@@ -467,6 +481,7 @@ def progCmd(desc, start, end):
     color = ''
     scope = -1
     atwork = False
+    devlist = []
 
     try:
         # User entry.. so we need to be sure correct syntax and can contains no defined numbers of ':' 
@@ -485,160 +500,164 @@ def progCmd(desc, start, end):
 
     typecmd = typecmd.lower()
 
-    # if device name not found , exit
-    if not devname.lower() in devices:
-        genError('progCmd',_('unknown device : {}').format(devname))
-        return
-    else:
-        idx = devices[devname.lower()]['idx']
-        status = devices[devname.lower()]['Status']
-        if (devices[devname.lower()]['Name']).lower() == atworkdevicename.lower():
-            atwork = True
+    # we can have more than one device split by ","
+    devlist = devname.split(',')
 
-    # if typecmd = switch   we do On or Off, end say to Toggle 
-    # if typecmd = Level    we do Setlevel % , end say to put 0/Off
-    # if typecmd = rgb      we put light to corresponding color/On, end say to put it Off 
-    # if typecmd = push     we simulate push button, only for start, can be On or Off
+    for devname in devlist:
+        # if device name not found , next
+        if not devname.lower() in devices:
+            genError('progCmd',_('unknown device : {}').format(devname))
+            continue
+        else:
+            idx = devices[devname.lower()]['idx']
+            status = devices[devname.lower()]['Status']
+            if (devices[devname.lower()]['Name']).lower() == atworkdevicename.lower():
+                atwork = True
 
-    if typecmd in allowedcmd:
-        # generate the cmd to execute
-        if typecmd == 'switch' or typecmd == 'push':
-            if value.lower() == 'on':
-                cmd,endcmd = 0,1
-            elif value.lower() == 'off':
-                cmd,endcmd = 1,0
-            else:
-                typecmd = '*error*'
-                print(_('Error on value for switch/push : {}').format(str(value)))
-            if typecmd == 'push':
-                scope = 0
-        elif typecmd == 'level':
-            if int(value) > 0:
-                cmd = 0
+        # if typecmd = switch   we do On or Off, end say to Toggle 
+        # if typecmd = Level    we do Setlevel % , end say to put 0/Off
+        # if typecmd = rgb      we put light to corresponding color/On, end say to put it Off 
+        # if typecmd = push     we simulate push button, only for start, can be On or Off
+
+        if typecmd in allowedcmd:
+            # generate the cmd to execute
+            if typecmd == 'switch' or typecmd == 'push':
+                if value.lower() == 'on':
+                    cmd,endcmd = 0,1
+                elif value.lower() == 'off':
+                    cmd,endcmd = 1,0
+                else:
+                    typecmd = '*error*'
+                    print(_('Error on value for switch/push : {}').format(str(value)))
+                if typecmd == 'push':
+                    scope = 0
+            elif typecmd == 'level':
+                if int(value) > 0:
+                    cmd = 0
+                    endcmd = 1
+                    level = int(value)
+                else:
+                    typecmd = '*error*'
+                    print(_('Error on value for level : {}').format(str(value)))
+            elif typecmd == 'rgb':
+                # we need to calculate hue = int(c.hue * 360 ), rgb * 255
+                level = 100
                 endcmd = 1
-                level = int(value)
-            else:
-                typecmd = '*error*'
-                print(_('Error on value for level : {}').format(str(value)))
-        elif typecmd == 'rgb':
-            # we need to calculate hue = int(c.hue * 360 ), rgb * 255
-            level = 100
-            endcmd = 1
-            cmd = 0
-            # we take color and translate if needed
-            colname=str(value).lower().rstrip('\r\n')
-            if langto != 'en':
-                colname=trText(colname,'en',langto)            
-            try:
-                col=Color(colname)
-                hue = int(col.hue * 360)
-                r = int(col.rgb[0] * 255)
-                g = int(col.rgb[1] * 255)
-                b = int(col.rgb[2] * 255)
-                rgb=(r,g,b)
-                print(' Color : ' + colname + ' RGB Value : ' + str(rgb) + ' Hue : ' + str(hue))
-                color='{"b":'+ str(b) +',"cw":0,"g":'+ str(g) +',"m":3,"r":'+ str(r) +',"t":0,"ww":0}'
-            except:
-                genError('progCmd',_('unknown color : {}').format(colname))
-                return
+                cmd = 0
+                # we take color and translate if needed
+                colname=str(value).lower().rstrip('\r\n')
+                if langto != 'en':
+                    colname=trText(colname,'en',langto)            
+                try:
+                    col=Color(colname)
+                    hue = int(col.hue * 360)
+                    r = int(col.rgb[0] * 255)
+                    g = int(col.rgb[1] * 255)
+                    b = int(col.rgb[2] * 255)
+                    rgb=(r,g,b)
+                    print(' Color : ' + colname + ' RGB Value : ' + str(rgb) + ' Hue : ' + str(hue))
+                    color='{"b":'+ str(b) +',"cw":0,"g":'+ str(g) +',"m":3,"r":'+ str(r) +',"t":0,"ww":0}'
+                except:
+                    genError('progCmd',_('unknown color : {}').format(colname))
+                    return
 
-        print('cmd:'+str(cmd)+' level:'+str(level) +' hue:'+str(hue)+' scope:'+str(scope) + ' atWork:' + str(atwork))
-        print(_('Actual status for {} is: {}').format(devname,status))
+            print('cmd:'+str(cmd)+' level:'+str(level) +' hue:'+str(hue)+' scope:'+str(scope) + ' atWork:' + str(atwork))
+            print(_('Actual status for {} is: {}').format(devname,status))
 
-        # execute / schedule the cmd
-        if start.strftime("%Y%m%d %H%M") < today.strftime("%Y%m%d %H%M"):
-            print(_('we execute cmd now and schedule end'))
-            # we execute cmd now and schedule end, end at first
-            if typecmd == 'switch' or typecmd == 'rgb' or typecmd == 'push' or typecmd == 'level':
-                # end only if scope <> 0
-                if int(scope) != 0:            
-                    # end at first                
-                    if genTimer(end,endcmd,idx,level,hue,color,atwork):
-                        if ('**stop**' not in params):
+            # execute / schedule the cmd
+            if start.strftime("%Y%m%d %H%M") < today.strftime("%Y%m%d %H%M"):
+                print(_('we execute cmd now and schedule end'))
+                # we execute cmd now and schedule end, end at first
+                if typecmd == 'switch' or typecmd == 'rgb' or typecmd == 'push' or typecmd == 'level':
+                    # end only if scope <> 0
+                    if int(scope) != 0:            
+                        # end at first                
+                        if genTimer(end,endcmd,idx,level,hue,color,atwork):
+                            if ('**stop**' not in params):
+                                if not exeDomoticz(params):
+                                    print(_('Error to execute add timer for end: {}').format(end.strftime("%Y%m%d %H%M")))
+                                else:
+                                    if data['status'] != 'OK':
+                                        print(_('Error to create timer for end : {}').format(end.strftime("%Y%m%d %H%M")))
+                            else:
+                                print(_('Nothing to do for this schedule: {}').format(str(end)))
+                        else:
+                            print(_('Error to create add timer for end: {}').format(end.strftime("%Y%m%d %H%M")))
+                    else:
+                        print(_('End schedule not created, scope = {}').format(str(scope)))
+                    # now always
+                    if cmd == 0: 
+                        cmd = 'On' 
+                    else: 
+                        cmd = 'Off'
+                    if status != 'Off':
+                        status = 'On'                    
+                    # test device status before send cmd, if same, nothing to do except for level
+                    if (status != cmd) or (typecmd == 'level'):
+                        if typecmd == 'switch' or typecmd == 'push':
+                            #/json.htm?type=command&param=switchlight&idx=272&switchcmd=Off&level=0&passcode=
+                            params = {'type':'command','param':'switchlight','idx':''+str(idx)+'','switchcmd':''+cmd+'','level':'0','passcode':''}
                             if not exeDomoticz(params):
-                                print(_('Error to execute add timer for end: {}').format(end.strftime("%Y%m%d %H%M")))
+                                print(_('Error to execute command : {}').format(params))
                             else:
                                 if data['status'] != 'OK':
-                                    print(_('Error to create timer for end : {}').format(end.strftime("%Y%m%d %H%M")))
-                        else:
-                            print(_('Nothing to do for this schedule: {}').format(str(end)))
+                                    print(_('Domoticz status not OK for {} command: {}').format('switch',str(idx)))
+                        elif typecmd == 'rgb':
+                            #/json.htm?type=command&param=setcolbrightnessvalue&idx=1054&hue=274&brightness=100&iswhite=false
+                            params = {'type':'command','param':'setcolbrightnessvalue','idx':''+str(idx)+'','hue':''+str(hue)+'','brightness':'100','iswhite':'false'}
+                            if not exeDomoticz(params):
+                                print(_('Error to execute command : {}').format(params))
+                            else:
+                                if data['status'] != 'OK':
+                                    print(_('Domoticz status not OK for {} command: {}').format('rgb',str(idx)))
+                        elif typecmd == 'level':
+                            #/json.htm?type=command&param=switchlight&idx=1048&switchcmd=Set Level&level=42
+                            params = {'type':'command','param':'switchlight','idx':''+str(idx)+'','switchcmd':'Set Level','level':''+str(level)+''}
+                            if not exeDomoticz(params):
+                                print(_('Error to execute command : {}').format(params))
+                            else:
+                                if data['status'] != 'OK':
+                                    print(_('Domoticz status not OK for {} command: {}').format('level',str(idx)))
                     else:
-                        print(_('Error to create add timer for end: {}').format(end.strftime("%Y%m%d %H%M")))
+                        print(_('Nothing to do now'))
                 else:
-                    print(_('End schedule not created, scope = {}').format(str(scope)))
-                # now always
-                if cmd == 0: 
-                    cmd = 'On' 
-                else: 
-                    cmd = 'Off'
-                if status != 'Off':
-                    status = 'On'                    
-                # test device status before send cmd, if same, nothing to do except for level
-                if (status != cmd) or (typecmd == 'level'):
-                    if typecmd == 'switch' or typecmd == 'push':
-                        #/json.htm?type=command&param=switchlight&idx=272&switchcmd=Off&level=0&passcode=
-                        params = {'type':'command','param':'switchlight','idx':''+str(idx)+'','switchcmd':''+cmd+'','level':'0','passcode':''}
-                        if not exeDomoticz(params):
-                            print(_('Error to execute command : {}').format(params))
-                        else:
-                            if data['status'] != 'OK':
-                                print(_('Domoticz status not OK for {} command: {}').format('switch',str(idx)))
-                    elif typecmd == 'rgb':
-                        #/json.htm?type=command&param=setcolbrightnessvalue&idx=1054&hue=274&brightness=100&iswhite=false
-                        params = {'type':'command','param':'setcolbrightnessvalue','idx':''+str(idx)+'','hue':''+str(hue)+'','brightness':'100','iswhite':'false'}
-                        if not exeDomoticz(params):
-                            print(_('Error to execute command : {}').format(params))
-                        else:
-                            if data['status'] != 'OK':
-                                print(_('Domoticz status not OK for {} command: {}').format('rgb',str(idx)))
-                    elif typecmd == 'level':
-                        #/json.htm?type=command&param=switchlight&idx=1048&switchcmd=Set Level&level=42
-                        params = {'type':'command','param':'switchlight','idx':''+str(idx)+'','switchcmd':'Set Level','level':''+str(level)+''}
-                        if not exeDomoticz(params):
-                            print(_('Error to execute command : {}').format(params))
-                        else:
-                            if data['status'] != 'OK':
-                                print(_('Domoticz status not OK for {} command: {}').format('level',str(idx)))
-                else:
-                    print(_('Nothing to do now'))
+                    print(_('Typecmd not managed here (execute / schedule the cmd) : {}').format(typecmd))
             else:
-                print(_('Typecmd not managed here (execute / schedule the cmd) : {}').format(typecmd))
-        else:
-            print(_('we schedule from start to end'))
-            # we schedule from start to end, end at first
-            if typecmd == 'switch' or typecmd == 'rgb' or typecmd == 'level' or typecmd == 'push':
-                # end only if scope <> 0
-                if int(scope) != 0:            
-                    # end at first
-                    if genTimer(end,endcmd,idx,level,hue,color,atwork):
+                print(_('we schedule from start to end'))
+                # we schedule from start to end, end at first
+                if typecmd == 'switch' or typecmd == 'rgb' or typecmd == 'level' or typecmd == 'push':
+                    # end only if scope <> 0
+                    if int(scope) != 0:            
+                        # end at first
+                        if genTimer(end,endcmd,idx,level,hue,color,atwork):
+                            if '**stop**' not in params:
+                                if not exeDomoticz(params):
+                                    print(_('Error to execute add timer for end: {}').format(end.strftime("%Y%m%d %H%M")))
+                                else:
+                                    if data['status'] != 'OK':
+                                        print(_('Error to create timer for end : {}').format(end.strftime("%Y%m%d %H%M")))
+                            else:
+                                print(_('Nothing to do for this schedule: {}').format(str(end)))
+                        else:
+                            print(_('Error to create add timer for end: {}').format(end.strftime("%Y%m%d %H%M")))
+                    else:
+                        print(_('End schedule not created, scope = {}').format(str(scope)))
+                    # gen start 
+                    if genTimer(start,cmd,idx,level,hue,color,atwork):
                         if '**stop**' not in params:
                             if not exeDomoticz(params):
-                                print(_('Error to execute add timer for end: {}').format(end.strftime("%Y%m%d %H%M")))
+                                print(_('Error to execute add timer for start: {}').format(start.strftime("%Y%m%d %H%M")))
                             else:
                                 if data['status'] != 'OK':
-                                    print(_('Error to create timer for end : {}').format(end.strftime("%Y%m%d %H%M")))
+                                    print(_('Error to create timer for start : {}').format(start.strftime("%Y%m%d %H%M")))
                         else:
-                            print(_('Nothing to do for this schedule: {}').format(str(end)))
+                                print(_('Nothing to do for this schedule: {}').format(str(start)))
                     else:
-                        print(_('Error to create add timer for end: {}').format(end.strftime("%Y%m%d %H%M")))
+                        print(_('Error to create add timer for start: {}').format(start.strftime("%Y%m%d %H%M")))
                 else:
-                    print(_('End schedule not created, scope = {}').format(str(scope)))
-                # gen start 
-                if genTimer(start,cmd,idx,level,hue,color,atwork):
-                    if '**stop**' not in params:
-                        if not exeDomoticz(params):
-                            print(_('Error to execute add timer for start: {}').format(start.strftime("%Y%m%d %H%M")))
-                        else:
-                            if data['status'] != 'OK':
-                                print(_('Error to create timer for start : {}').format(start.strftime("%Y%m%d %H%M")))
-                    else:
-                            print(_('Nothing to do for this schedule: {}').format(str(start)))
-                else:
-                    print(_('Error to create add timer for start: {}').format(start.strftime("%Y%m%d %H%M")))
-            else:
-                print(_('Typecmd not managed here (we schedule from start to end) : {}').format(typecmd))
-    else:
-        print(_('Unknown command type : {}').format(typecmd))
+                    print(_('Typecmd not managed here (we schedule from start to end) : {}').format(typecmd))
+        else:
+            print(_('Unknown command type : {}').format(typecmd))
 
     return
 
@@ -987,6 +1006,7 @@ def processiCal():
     TZ=pytz.timezone(tz)
     today=TZ.localize(today)
     today=today.astimezone(TZ) 
+    todayorig = datetime.now()
 
     # Read all events
     print("-----------------iCal---------------------------")
@@ -1002,11 +1022,11 @@ def processiCal():
             if description is None:
                 description = ''
             #retreive start & end date
-            startdt = component.get('dtstart').dt
-            enddt = component.get('dtend').dt
+            startdtorig = component.get('dtstart').dt
+            enddtorig = component.get('dtend').dt
             #some work on date
-            startdt = convDate(startdt)
-            enddt   = convDate(enddt)
+            startdt = convDate(startdtorig)
+            enddt   = convDate(enddtorig)
             # dates to exclude
             exdate = component.get('exdate')
             # event duration
@@ -1034,10 +1054,10 @@ def processiCal():
                     else:                            
                         excludedate.append(exdate.dts[0].dt)
                 # we manage only occurence from today to today + 90 days
-                addtonow = today + timedelta(days=90)
+                addtonow = todayorig + timedelta(days=90)
                 # obtain rule name and generate managed date list
                 rulename = component.get('rrule').to_ical().decode('utf-8')
-                datetomanage=getRecurrences(rulename, startdt, today, addtonow, excludedate)
+                datetomanage=getRecurrences(rulename, startdtorig, todayorig, addtonow, excludedate)
                 # create list from received occurence
                 datetomanage_calc = []
                 for items in datetomanage:
@@ -1051,7 +1071,7 @@ def processiCal():
                 # no rrule
                 datetomanage = [{'startdt':startdt ,'enddt':enddt }]
             #
-            # test if startdate < enddate  (-1): can occur from rrule
+            # test if startdate < enddate  (-1): can happend with rrule
             if len(datetomanage) > 1:
                 if datetomanage[1]['startdt'] < datetomanage[0]['enddt']:
                     print(_('WARNING :  start date overlap end date, result unpredictable'))

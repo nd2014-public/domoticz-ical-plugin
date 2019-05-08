@@ -247,13 +247,13 @@ def onHeartbeat():
 
             # refresh israin every 15 minutes        
             if ( 5 in Devices ):
-                if ((((minutes_since_midnight % 15) == 0)) and bypassrain):
+                # if ((((minutes_since_midnight % 15) == 0)) and bypassrain):
                     valuedevice = 5
                     calcisRain()
                     UpdateDevice(4,1,_('executing, updating isRain ......'))
                     bypassrain = False
-                else:
-                    bypassrain = True
+                # else:
+                #     bypassrain = True
 
     else:
         Domoticz.Error(_('Port already in use'))
@@ -924,8 +924,11 @@ def calcisRain():
     level = 1
     # we need the village code linked to the name
     name = str(Parameters['HardwareID']) + '|iCal|' + 'codevillage'
+
+    Domoticz.Log("Name %s " % name)
     if (name) in domvars:
         codeville = domvars[name]['Value']
+        Domoticz.Log("Code ville : " + codeville )
     else:
         Domoticz.Error(_('Not able to find codevillage'))
         return False
@@ -933,6 +936,7 @@ def calcisRain():
     try:
         # request data from meteofrance 
         url = 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/' + codeville
+        Domoticz.Log("URL " + url)
         data=queryData(url)
     except:
         Domoticz.Error(_('Not able to query data from Meteo France'))
