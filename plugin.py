@@ -141,24 +141,24 @@ class BasePlugin:
         if (Parameters["Mode4"]):
             infos4 = get_and_parse_cal(Parameters["Mode4"], True)
 
-        at_work = 1 if infos1.at_work or infos2.at_work or infos3.at_work or infos4.at_work else 0
+        at_work = 1 if infos1['at_work'] or infos2['at_work'] or infos3['at_work'] or infos4['at_work'] else 0
         Devices[1].Update(at_work, str(at_work))
 
         todo = ""
-        for event in infos1.lst_events_today:
+        for event in infos1['lst_events_today']:
             todo += event.name + "\n"
-        for event in infos2.lst_events_today:
+        for event in infos2['lst_events_today']:
             todo += event.name + "\n"
-        for event in infos3.lst_events_today:
+        for event in infos3['lst_events_today']:
             todo += event.name + "\n"
-        for event in infos4.lst_events_today:
+        for event in infos4['lst_events_today']:
             todo += event.name + "\n"
 
         Devices[2].Update(0, str(todo))
 
         # Pluie :
         pluie = get_pluie(143100)
-        Devices[3](pluie.level, pluie.text)
+        Devices[3](pluie['level'], pluie['text'])
 
 
 
