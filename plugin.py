@@ -181,7 +181,7 @@ class BasePlugin:
 
         # Next event :
         val = ''
-        if (infos1['next_event'] not None):
+        if (infos1['next_event'] is not None):
             val = infos1['next_event'].name + "\n" + infos1['next_event'].description
         Devices[4].Update(0, str(val))
 
