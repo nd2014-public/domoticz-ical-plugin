@@ -2,6 +2,7 @@
 Domoticz iCal Plugin
 --------------------
 
+Yet another version of iCal plugin without icalendar package ... And other features.
 
 Installation
 ------------
@@ -21,8 +22,17 @@ sudo service domoticz.sh restart
 Features to add
 ---------------
 
-- Create device to set time to next event. Goal: Create events based on next meeting/etc. If next event is in 20 minutes and not woke up, trigger wake up scenario.
-- 
+- [ ] Integrate multiple calendars : multiple personnal & mutliple pro calendars
+- [ ] Set devices
+    - [ ] Time of work begin today
+    - [ ] Time of work end today
+    - [ ] Time of next personnal events with informations : What, Where
+    - [ ] Text : Summary of events today (3 next events)
+    - [ ] France only : Will it rain in 1H ?
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
 
 
 
