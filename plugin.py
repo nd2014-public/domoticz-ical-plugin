@@ -14,7 +14,7 @@
 # Below is what will be displayed in Domoticz GUI under HW
 #
 """
-<plugin key="Calendar - ICS Reader" name="An ICS calendar plugin for Domoticz" author="msalles" version="1.0.0" wikilink="" externallink="">
+<plugin key="ics-calendar-plugin" name="Calendar (ICS) plugin for Domoticz" author="msalles" version="1.0.0" wikilink="" externallink="">
     <description>
         <h2>An ICS Plugin for Domoticz</h2><br/>
         <h3>Features</h3>
@@ -43,6 +43,7 @@ import Domoticz
 import subprocess
 import time
 from datetime import datetime
+import arrow
 #
 import socket
 import urllib.request
@@ -56,7 +57,6 @@ from urllib.error import URLError, HTTPError
 import ics
 import sys
 import os
-import arrow
 
 
 def get_and_parse_cal (icsUrl, isPro):
