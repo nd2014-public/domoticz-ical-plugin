@@ -126,7 +126,7 @@ def get_pluie (codeville):
 class BasePlugin:
 
     def onStart(self):
-        Domoticz.Heartbeat(30)
+        Domoticz.Heartbeat(300)
 
         if Parameters["Mode6"] != "Normal":
             Domoticz.Debugging(1)
