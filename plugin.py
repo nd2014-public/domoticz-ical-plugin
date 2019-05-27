@@ -42,7 +42,7 @@
 import Domoticz
 import subprocess
 import time
-from datetime
+import datetime
 import arrow
 #
 import socket
