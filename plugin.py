@@ -16,7 +16,7 @@
 """
 <plugin key="ics-calendar-plugin" name="Calendar (ICS) plugin for Domoticz" author="msalles" version="1.0.0" wikilink="" externallink="">
     <description>
-        <h2>An ICS Plugin for Domoticz</h2><br/>
+        <h2>An ICS calendar plugin for Domoticz</h2><br/>
         <h3>Features</h3>
         <ul style="list-style-type:square">
             <li></li>
@@ -42,7 +42,7 @@
 import Domoticz
 import subprocess
 import time
-from datetime import datetime
+from datetime
 import arrow
 #
 import socket
