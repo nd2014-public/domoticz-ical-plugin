@@ -111,9 +111,15 @@ def get_pluie (codeville):
         # if find ': Pr' into pluie ==> will rain !!, set level to  4
         level = pluie.find(': Pr')
         if level == -1:
-            level = 0      
-        else:
+            level = 0
+        elif (pluie.find('ions fortes')):
             level = 4
+        elif (pluie.find('ions modérées')):
+            level = 3
+        elif (pluie.find('ions faibles')):
+            level = 2
+        else:
+            level = 0
 
     return { "level": level, "text": pluie }
 
@@ -126,9 +132,10 @@ class BasePlugin:
             Domoticz.Debugging(1)
 
         if (len(Devices) == 0):
-            Domoticz.Device(Name="at_work",  Unit=1, TypeName="Switch", Used= 1).Create()
-            Domoticz.Device(Name="Todo Today",  Unit=2, TypeName="Text", Used= 1).Create()
-            Domoticz.Device(Name="Will it rain ?",  Unit=3, TypeName="Alert", Used=1).Create()
+            Domoticz.Device(Name="Will it rain ?",  Unit=1, TypeName="Alert", Used=1).Create()
+            Domoticz.Device(Name="at_work",  Unit=2, TypeName="Switch", Used= 1).Create()
+            Domoticz.Device(Name="Todo Today",  Unit=3, TypeName="Text", Used= 1).Create()
+            Domoticz.Device(Name="Next event to come",  Unit=4, TypeName="Text", Used= 1).Create()
 
             logDebugMessage("Devices created.")
 
@@ -138,6 +145,10 @@ class BasePlugin:
         return True
 
     def onHeartbeat(self):
+
+        # Pluie :
+        pluie = get_pluie('143100')
+        Devices[1].Update(pluie['level'], pluie['text'])
 
         infos1 = { "doing": None, "at_work": False, "lst_events_today": [], "next_event": None } 
         infos2 = { "doing": None, "at_work": False, "lst_events_today": [], "next_event": None } 
@@ -154,7 +165,7 @@ class BasePlugin:
             infos4 = get_and_parse_cal(Parameters["Mode4"], True)
 
         at_work = 1 if infos1['at_work'] or infos2['at_work'] or infos3['at_work'] or infos4['at_work'] else 0
-        Devices[1].Update(at_work, str(at_work))
+        Devices[2].Update(at_work, str(at_work))
 
         todo = ""
         for event in infos1['lst_events_today']:
@@ -166,11 +177,13 @@ class BasePlugin:
         for event in infos4['lst_events_today']:
             todo += event.name + "\n"
 
-        Devices[2].Update(0, str(todo))
+        Devices[3].Update(0, str(todo))
 
-        # Pluie :
-        pluie = get_pluie('143100')
-        Devices[3].Update(pluie['level'], pluie['text'])
+        # Next event :
+        val = ''
+        if (infos1['next_event'] not None):
+            val = infos1['next_event'].name + "\n" + infos1['next_event'].description
+        Devices[4].Update(0, str(val))
 
 
 
