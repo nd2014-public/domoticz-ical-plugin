@@ -109,15 +109,15 @@ def get_pluie (codeville):
             pluie = 'aucun resultat'
  
         # if find ': Pr' into pluie ==> will rain !!, set level to  4
-        level = pluie.find(': Pr')
-        if level == -1:
+        level = 0
+        if (pluie.find('Pas de pr') > -1):
             level = 0
-        elif (pluie.find('ions fortes')):
+        elif (pluie.find('ions fortes') > -1):
             level = 4
-        elif (pluie.find('ions modérées')):
+        elif (pluie.find('ions mod') > -1):
             level = 3
-        elif (pluie.find('ions faibles')):
-            level = 2
+        elif (pluie.find('ions faibles') > -1):
+            level = 1
         else:
             level = 0
 
@@ -180,7 +180,7 @@ class BasePlugin:
         Devices[3].Update(0, str(todo))
 
         # Next event :
-        val = ''
+        val = ""
         if (infos1['next_event'] is not None):
             val = infos1['next_event'].name + "\n" + infos1['next_event'].description
         Devices[4].Update(0, str(val))
