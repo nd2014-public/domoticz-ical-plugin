@@ -58,6 +58,18 @@ import ics
 import sys
 import os
 
+def queryData(url):
+    try:
+        req=urllib.request.Request(url,headers=\
+        {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
+        html=urllib.request.urlopen(req, timeout=2)
+        Response=html.read()  
+        encoding = html.info().get_content_charset('utf-8')
+        data=json.loads(Response.decode(encoding))        
+    except:
+        Domoticz.Error(_('Error to execute query'))
+ 
+    return data
 
 def get_and_parse_cal (icsUrl, isPro):
     # Create Calendar from file :
