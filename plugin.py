@@ -170,7 +170,7 @@ class BasePlugin:
 
         # Pluie :
         pluie = get_pluie('143100')
-        Devices[3](pluie['level'], pluie['text'])
+        Devices[3].Update(pluie['level'], pluie['text'])
 
 
 
