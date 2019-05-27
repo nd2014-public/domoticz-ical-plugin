@@ -157,7 +157,7 @@ class BasePlugin:
         Devices[2].Update(0, str(todo))
 
         # Pluie :
-        pluie = get_pluie(143100)
+        pluie = get_pluie('143100')
         Devices[3](pluie['level'], pluie['text'])
 
 
