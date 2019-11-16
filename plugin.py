@@ -23,10 +23,10 @@
         </ul>
     </description>
     <params>
-        <param field="Mode1" label="#1 personnal ICS link" width="80px" required="true" default=""/>
-        <param field="Mode2" label="#2 personnal ICS link" width="200px" required="false" default=""/>
-        <param field="Mode3" label="#1 professional ICS link" width="80px" required="false" default=""/>
-        <param field="Mode4" label="#2 professional ICS link" width="200px" required="false" default=""/>
+        <param field="Mode1" label="#1 personnal ICS link" width="300px" required="true" default=""/>
+        <param field="Mode2" label="#2 personnal ICS link" width="300px" required="false" default=""/>
+        <param field="Mode3" label="#1 professional ICS link" width="300px" required="false" default=""/>
+        <param field="Mode4" label="#2 professional ICS link" width="300px" required="false" default=""/>
         <param field="Mode6" label="Debug" width="75px">
             <options>
                 <option label="True" value="Debug"/>
@@ -58,7 +58,7 @@ import ics
 import sys
 import os
 
-def queryData(url):
+def query_data(url):
     try:
         req=urllib.request.Request(url,headers=\
         {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})
@@ -74,7 +74,9 @@ def queryData(url):
 def get_and_parse_cal (icsUrl, isPro):
     # Create Calendar from file :
     from urllib.request import urlopen 
-    c = ics.Calendar(urlopen(icsUrl).read().decode())
+    cal_content = urlopen(icsUrl).read().decode()
+    print(cal_content)
+    c = ics.Calendar(cal_content)
     now_events = c.timeline.now()
     now_doing = len(list(now_events)) > 0
     # is_now = False
@@ -82,7 +84,7 @@ def get_and_parse_cal (icsUrl, isPro):
     return {
         "doing": list(c.timeline.now()),
         "at_work": isPro and now_doing,
-        "lst_events_today": list(c.timeline.today()),
+        "lst_events_today": list(c.timeline.today(arrow.now())),
         "next_event": next_event
     }
 
@@ -91,7 +93,7 @@ def get_pluie (codeville):
     try:
         # request data from meteofrance 
         url = 'http://www.meteofrance.com/mf3-rpc-portlet/rest/pluie/' + codeville
-        data=queryData(url)
+        data=query_data(url)
     except:
         Domoticz.Error(_('Not able to query data from Meteo France'))
         return False
@@ -110,9 +112,7 @@ def get_pluie (codeville):
  
         # if find ': Pr' into pluie ==> will rain !!, set level to  4
         level = 0
-        if (pluie.find('Pas de pr') > -1):
-            level = 0
-        elif (pluie.find('ions fortes') > -1):
+        if (pluie.find('ions fortes') > -1):
             level = 4
         elif (pluie.find('ions mod') > -1):
             level = 3
@@ -131,6 +131,8 @@ class BasePlugin:
         if Parameters["Mode6"] != "Normal":
             Domoticz.Debugging(1)
 
+        if ('ICal'  not in Images): Domoticz.Image('ICal Icons.zip').Create()
+
         if (len(Devices) == 0):
             Domoticz.Device(Name="Will it rain ?",  Unit=1, TypeName="Alert", Used=1).Create()
             Domoticz.Device(Name="at_work",  Unit=2, TypeName="Switch", Used= 1).Create()
@@ -140,6 +142,7 @@ class BasePlugin:
             logDebugMessage("Devices created.")
 
         return True
+
 
     def onCommand(self, Unit, Command, Level, Color):        
         return True
@@ -222,7 +225,7 @@ def onHeartbeat():
 def logDebugMessage(message):
     if (Parameters["Mode6"] == "Debug"):
         now = datetime.datetime.now()
-        f = open(Parameters["HomeFolder"] + "androidtv-plugin.log", "a")
+        f = open(Parameters["HomeFolder"] + "ical-plugin.log", "a")
         f.write("DEBUG - " + now.isoformat() + " - " + message + "\r\n")
         f.close()
     Domoticz.Debug(message)
@@ -230,7 +233,7 @@ def logDebugMessage(message):
 def logErrorMessage(message):
     if (Parameters["Mode6"] == "Debug"):
         now = datetime.datetime.now()
-        f = open(Parameters["HomeFolder"] + "androidtv-plugin.log", "a")
+        f = open(Parameters["HomeFolder"] + "ical-plugin.log", "a")
         f.write("ERROR - " + now.isoformat() + " - " + message + "\r\n")
         f.close()
     Domoticz.Error(message)
